@@ -111,6 +111,8 @@ func (t *FireArms) Invoke(stub shim.ChaincodeStubInterface, function string, arg
 		createApplication(stub, args)
 	} else if function == "updateApplication" {
 		updateApplication(stub, args)
+	} else if function == "updateLicense" {
+		updateLicense(stub, args)
 	}
 
 	return nil, nil
@@ -258,6 +260,38 @@ func getAllApp(stub shim.ChaincodeStubInterface) ([]byte, error) {
 	return outputBytes, nil
 }
 
+func updateLicense(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+	var existingLicenseMap map[string]string
+	var updatedFields map[string]string
+
+	var licenseid string
+	logger.Info("update license called")
+
+	payload := args[0]
+	logger.Info("update Application payload  " + payload)
+
+	json.Unmarshal([]byte(payload), &updatedFields)
+
+	for key, value := range updatedFields {
+		if key == "licenseno" {
+
+			licenseid = value
+			recBytes, _ := stub.GetState(licenseid)
+			if recBytes == nil {
+				jsonResp := "{\"Error\":\"No records available for this id " + key + "\"}"
+				return nil, errors.New(jsonResp)
+			}
+			json.Unmarshal(recBytes, &existingLicenseMap)
+		}
+	}
+
+	updatedReord, _ := updateRecord(existingLicenseMap, updatedFields)
+	stub.PutState(licenseid, []byte(updatedReord))
+	return nil, nil
+
+}
+
 //update application
 func updateApplication(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 
@@ -300,9 +334,10 @@ func updateApplication(stub shim.ChaincodeStubInterface, args []string) ([]byte,
 		newLicenseid := uniqueId + 1
 		stub.PutState("license", []byte(strconv.Itoa(newLicenseid)))
 
-		licenseJson, _ := createLicenseJson(existingRecMap)
+		licenseJson, _ := createLicenseJson(license, existingRecMap)
 		existingRecMap["licenseno"] = license
 		stub.PutState(license, []byte(licenseJson))
+
 	}
 
 	updatedReord, _ := updateRecord(existingRecMap, updatedFields)
@@ -311,7 +346,7 @@ func updateApplication(stub shim.ChaincodeStubInterface, args []string) ([]byte,
 }
 
 //Update the existing record with the mofied key value pair
-func createLicenseJson(existingRecMap map[string]string) (string, error) {
+func createLicenseJson(licenseNumber string, existingRecMap map[string]string) (string, error) {
 
 	var licenseRecord map[string]string
 	licenseRecord = make(map[string]string)
@@ -326,6 +361,7 @@ func createLicenseJson(existingRecMap map[string]string) (string, error) {
 
 	}
 
+	licenseRecord["licenseno"] = licenseNumber
 	licenseRecord["weaponname"] = ""
 	licenseRecord["dateofpurchase"] = ""
 
