@@ -313,6 +313,7 @@ func updateApplication(stub shim.ChaincodeStubInterface, args []string) ([]byte,
 func createLicenseJson(existingRecMap map[string]string) (string, error) {
 
 	var licenseRecord map[string]string
+	licenseRecord = make(map[string]string)
 
 	for key, value := range existingRecMap {
 
