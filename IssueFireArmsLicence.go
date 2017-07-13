@@ -301,6 +301,7 @@ func updateApplication(stub shim.ChaincodeStubInterface, args []string) ([]byte,
 		stub.PutState("license", []byte(strconv.Itoa(newLicenseid)))
 
 		licenseJson, _ := createLicenseJson(existingRecMap)
+		existingRecMap["licenseno"] = license
 		stub.PutState(license, []byte(licenseJson))
 	}
 
@@ -317,7 +318,7 @@ func createLicenseJson(existingRecMap map[string]string) (string, error) {
 
 	for key, value := range existingRecMap {
 
-		if key == "fname" || key == "lname" || key == "email" || key == "phone" || key == "gender" || key == "firearms" || key == "applicationNumber" {
+		if key == "fname" || key == "lname" || key == "appemail" || key == "appphone" || key == "gender" || key == "firearmstype" || key == "applicationNumber" {
 
 			licenseRecord[key] = value
 
